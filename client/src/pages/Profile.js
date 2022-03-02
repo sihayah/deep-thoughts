@@ -2,13 +2,15 @@ import React from 'react';
 import { Redirect, useParams } from 'react-router-dom';
 import ThoughtList from '../components/ThoughtList';
 import FriendList from '../components/FriendList';
-import { useQuery } from '@apollo/client';
+import ThoughtForm from '../components/ThoughtForm';
+import { useQuery, useMutation } from '@apollo/client';
 import { QUERY_USER, QUERY_ME } from '../utils/queries';
+import { ADD_FRIEND } from '../utils/mutations';
 import Auth from '../utils/auth';
 
 const Profile = () => {
   const { username: userParam } = useParams();
-
+  const [addFriend] = useMutation(ADD_FRIEND);
 
 
   const { loading, data } = useQuery(userParam ? QUERY_USER : QUERY_ME, {
@@ -30,7 +32,17 @@ const Profile = () => {
         You need to log in to see this page!
       </h4>
     );
-  }
+  };
+
+  const handleClick = async () => {
+    try {
+      await addFriend({
+        variables: { id: user._id }
+      });
+    } catch (e) {
+      console.log(e)
+    }
+  };
 
   return (
     <div>
@@ -39,7 +51,11 @@ const Profile = () => {
           Viewing {userParam ? `{user.username}'s` : 'your'} profile.
         </h2>
       </div>
-
+      {userParam && (
+        <button className="btn ml-auto" onClick={handleClick}>
+            Add Friend
+          </button>        
+      )}
       <div className="flex-row justify-space-between mb-3">
         <div className="col-12 mb-3 col-lg-8">
           <ThoughtList thoughts={user.thoughts} title={`${user.username}'s thoughts...`} />
@@ -53,6 +69,11 @@ const Profile = () => {
             />
         </div>
       </div>
+      
+      <div className="mb-3">
+        {!userParam && <ThoughtForm />}        
+      </div>
+
     </div>
   );
 };
